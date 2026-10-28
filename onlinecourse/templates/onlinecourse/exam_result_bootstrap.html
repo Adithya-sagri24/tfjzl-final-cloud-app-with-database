@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Exam Result - {{ course.name }}</title>
+</head>
+<body>
+
+ <nav class="navbar navbar-light bg-light">
+    <div class="container-fluid">
+        <div class="navbar-header">
+              <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+            {% if user.is_authenticated %}
+            <li>
+                <a class="btn btn-link" href="#">{{ user.first_name }}({{ user.username }})</a>
+                <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
+            </li>
+            {% else %}
+            <li>
+                <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Username" name="username" >
+                        <input type="password" class="form-control" placeholder="Password" name="psw" >
+                        <button class="btn btn-primary" type="submit">Login</button>
+                        <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
+                    </div>
+                </form>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<div class="container-fluid mt-3">
+    {% if grade >= 70 %}
+    <div class="alert alert-success">
+       <!--HINT Display passed info -->
+       <b>Congratulations, {{ user.first_name|default:user.username }}!</b> You have passed the exam and completed the course with score {{ grade }}/100.
+    </div>
+    {% else %}
+    <div class="alert alert-danger">
+        <!--HINT Display failed info -->
+        <b>Failed</b> Sorry, {{ user.first_name|default:user.username }}! You have failed the exam with score {{ grade }}/100.
+    </div>
+    <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
+    {% endif %}
+
+    <div class="card-columns-vertical mt-3">
+        <h5>Exam results</h5>
+        <!--HINT Display exam results-->
+        {% for question in course.question_set.all %}
+        <div class="card mt-2">
+            <div class="card-header border-light">
+                <h5>{{ question.question_text }}</h5>
+            </div>
+            <div class="card-body">
+                {% for choice in question.choice_set.all %}
+                    <div class="form-check">
+                        {% if choice in selected_choices and choice.is_correct %}
+                            <p class="card-text text-success font-weight-bold" style="color: green;">
+                                &#10004; Correct answer: {{ choice.choice_text }}
+                            </p>
+                        {% elif choice in selected_choices and not choice.is_correct %}
+                            <p class="card-text text-danger font-weight-bold" style="color: red;">
+                                &#10008; Wrong answer: {{ choice.choice_text }}
+                            </p>
+                        {% elif choice not in selected_choices and choice.is_correct %}
+                            <p class="card-text text-warning font-weight-bold" style="color: orange;">
+                                &#9888; Not selected: {{ choice.choice_text }}
+                            </p>
+                        {% else %}
+                            <p class="card-text text-muted" style="color: gray;">
+                                {{ choice.choice_text }}
+                            </p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="mt-3 mb-4">
+        <a class="btn btn-primary" href="{% url 'onlinecourse:index' %}">Back to Courses</a>
+    </div>
+</div>
+</body>
+</html>
